@@ -1,0 +1,173 @@
+.sidebar-grid {
+  background: white;
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-4);
+  box-shadow: var(--shadow-sm);
+  height: fit-content;
+  position: sticky;
+  top: 20px;
+  border: 1px solid var(--slate-100);
+}
+
+.sidebar-header h3 {
+  font-size: var(--font-lg);
+  font-weight: 700;
+  color: var(--slate-800);
+  margin-bottom: var(--spacing-3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2) var(--spacing-3);
+  margin-bottom: var(--spacing-3);
+  padding-bottom: var(--spacing-3);
+  border-bottom: 1px solid var(--slate-100);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-xs);
+  color: var(--slate-600);
+  font-weight: 500;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.legend-dot.unvisited {
+  background: var(--slate-200);
+  border: 1px solid var(--slate-300);
+}
+
+.legend-dot.visited {
+  background: var(--warning-light);
+}
+
+.legend-dot.answered {
+  background: var(--success);
+}
+
+.legend-dot.marked {
+  background: var(--primary);
+  /* Changed to primary to match review badge usually */
+  /* Wait, review badge was warning in QuestionCard. Let's keep consistency. 
+     In QuestionCard.css, review badge is warning. 
+     In SidebarGrid logic (read earlier), .marked used warning colors.
+  */
+  background: var(--slate-600);
+  /* Neutral for 'marked' if it means 'review' */
+}
+
+/* Re-reading original logic:
+   visited -> #fbbf24 (warning-ish)
+   answered -> success
+   marked -> warning
+   
+   Let's stick to consistent semantic colors from index.css
+*/
+.legend-dot.marked {
+  background: var(--slate-500);
+  /* Distinct from visited */
+}
+
+
+.questions-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: var(--spacing-2);
+}
+
+.question-bubble {
+  aspect-ratio: 1;
+  border: 1px solid var(--slate-300);
+  border-radius: var(--radius-md);
+  background: white;
+  font-weight: 600;
+  font-size: var(--font-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--slate-700);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.question-bubble:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.question-bubble.unvisited {
+  background: var(--slate-50);
+}
+
+.question-bubble.visited {
+  background: var(--warning-soft);
+  border-color: var(--warning);
+  color: var(--warning-dark);
+  /* Ensure text contrast */
+}
+
+/* Specific overwrite for visited text color if needed, but var(--warning) is usually readable on soft bg */
+
+.question-bubble.answered {
+  background: var(--success);
+  border-color: var(--success);
+  color: white;
+}
+
+.question-bubble.marked {
+  background: var(--slate-600);
+  border-color: var(--slate-600);
+  color: white;
+}
+
+.question-bubble.active {
+  ring: 2px solid var(--primary);
+  ring-offset: 2px;
+  z-index: 1;
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .sidebar-grid {
+    position: static;
+    margin-top: var(--spacing-4);
+  }
+
+  .questions-grid {
+    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .sidebar-grid {
+    padding: var(--spacing-3);
+    border-radius: var(--radius-lg);
+  }
+
+  .questions-grid {
+    /* Auto-fill ensures it fits any screen width without overflow */
+    grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
+    gap: var(--spacing-1);
+  }
+
+  .question-bubble {
+    font-size: var(--font-xs);
+    border-radius: 6px;
+    /* Slightly squarer on mobile */
+  }
+}
