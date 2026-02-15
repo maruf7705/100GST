@@ -1,20 +1,5 @@
 [
   {
-    "studentName": "test_5",
-    "answers": {
-      "99": "b",
-      "100": "c"
-    },
-    "score": 0.75,
-    "totalMarks": 100,
-    "timestamp": "2026-02-15T07:49:33.557Z",
-    "attempted": 2,
-    "correct": 1,
-    "wrong": 1,
-    "pass": false,
-    "questionFile": "GST-Admission-2024-25.json"
-  },
-  {
     "studentName": "Maruf_1",
     "answers": {
       "1": "c",
