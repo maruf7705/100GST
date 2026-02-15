@@ -23,16 +23,55 @@ function ResultSummary({ questions, answers, studentName, score, onRestart, ques
   const [viewingQuestion, setViewingQuestion] = useState(null)
 
   function getCongratulatoryMessage() {
-    if (totalScore >= 80) return 'অসাধারণ! তুমি টপ স্কাইর করেছো! 🏆'
     if (totalScore >= 60) return 'Congratulations! তুমি GST এর জন্য Perfect 🎯'
-    return 'দুঃখিত, পাস মার্ক (৬০) অর্জন হয়নি। আবার চেষ্টা করো! 📚'
+    if (accuracy >= 90) return 'অসাধারণ! তুমি চমৎকার করেছো! 🏆'
+    if (accuracy >= 75) return 'খুব ভালো! চমৎকার কাজ! 🌟'
+    if (accuracy >= 60) return 'ভালো করেছো! এগিয়ে চলো! 💪'
+    return 'পরবর্তীতে আরও ভাল করবে! 📚'
+  }
+
+  function getQuestionStatus(q) {
+    const selected = answers[q.id]
+    const hasAnswer = selected !== undefined
+    const isCorrect = hasAnswer && selected === q.correctOptionId
+    return { selected, hasAnswer, isCorrect }
+  }
+
+  function getFilteredQuestions() {
+    return questions.filter((q) => {
+      const { hasAnswer, isCorrect } = getQuestionStatus(q)
+      if (filter === 'correct') return isCorrect
+      if (filter === 'wrong') return hasAnswer && !isCorrect
+      if (filter === 'unanswered') return !hasAnswer
+      return true
+    })
+  }
+
+  // Open single question popup
+  function openQuestion(qId) {
+    const q = questions.find(q => q.id === qId)
+    if (q) setViewingQuestion(q)
+  }
+
+  // Navigate prev/next in popup
+  function navigateQuestion(direction) {
+    if (!viewingQuestion) return
+    const idx = questions.findIndex(q => q.id === viewingQuestion.id)
+    const nextIdx = idx + direction
+    if (nextIdx >= 0 && nextIdx < questions.length) {
+      setViewingQuestion(questions[nextIdx])
+    }
+  }
+
+  function handlePrint() {
+    window.print()
   }
 
   function getBadge() {
-    if (totalScore >= 80) return { icon: '🥇', label: 'স্বর্ণ পদক', cls: 'gold' }
-    if (totalScore >= 70) return { icon: '🥈', label: 'রৌপ্য পদক', cls: 'silver' }
-    if (totalScore >= 60) return { icon: '🥉', label: 'ব্রোঞ্জ পদক', cls: 'bronze' }
-    return { icon: '⚠️', label: 'কৃতকার্য নয়', cls: 'participation' }
+    if (accuracy >= 90) return { icon: '🥇', label: 'স্বর্ণ পদক', cls: 'gold' }
+    if (accuracy >= 75) return { icon: '🥈', label: 'রৌপ্য পদক', cls: 'silver' }
+    if (accuracy >= 60) return { icon: '🥉', label: 'ব্রোঞ্জ পদক', cls: 'bronze' }
+    return { icon: '📋', label: 'অংশগ্রহণ', cls: 'participation' }
   }
 
   const badge = getBadge()
