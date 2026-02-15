@@ -89,8 +89,8 @@ function ExamPage() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-        <div>প্রশ্ন লোড হচ্ছে...</div>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <div className="bengali">প্রশ্ন লোড হচ্ছে...</div>
       </div>
     )
   }

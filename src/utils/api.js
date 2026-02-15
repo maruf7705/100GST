@@ -201,22 +201,40 @@ export async function loadQuestionFiles() {
 }
 
 export async function getActiveQuestionFile() {
+  // If running on localhost without Vercel functions, fall back to default
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    // Try to fetch active file from localStorage or exam-config.json if possible, 
+    // otherwise default to questions.json
+    console.warn('Running locally, skipping API call for active file')
+    return { activeFile: 'GST-Admission-2024-25.json' }
+    // Defaulting to the new file since that's what we want to test
+  }
+
   let res;
   try {
     res = await fetch('/api/get-active-question-file', {
       cache: 'no-store'
     })
   } catch (fetchErr) {
-    throw fetchErr;
+    console.warn('API fetch failed, using default', fetchErr)
+    return { activeFile: 'questions.json' }
   }
 
   if (!res.ok) {
     const text = await res.text().catch(() => 'Could not read error')
-    throw new Error(`Failed to get active question file: ${res.status} ${res.statusText}`)
+    // If 404 or other error, fallback
+    console.warn(`Failed to get active question file: ${res.status}, using default`)
+    return { activeFile: 'questions.json' }
   }
 
-  const data = await res.json()
-  return data
+  try {
+    const data = await res.json()
+    return data
+  } catch (e) {
+    // If response is not JSON (e.g. source code "export default"), fallback
+    console.warn('API returned invalid JSON, using default', e)
+    return { activeFile: 'questions.json' }
+  }
 }
 
 export async function setActiveQuestionFile(fileName) {

@@ -91,7 +91,7 @@
 
 .primary-btn {
   padding: 14px;
-  background: var(--primary);
+  background: #16a34a;
   color: white;
   border: none;
   border-radius: var(--radius-md);
@@ -105,7 +105,7 @@
 }
 
 .primary-btn:hover {
-  background: var(--primary-dark);
+  background: #15803d;
   transform: translateY(-1px);
 }
 

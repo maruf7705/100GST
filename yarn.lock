@@ -165,6 +165,16 @@
   resolved "https://registry.npmjs.org/@esbuild/win32-x64/-/win32-x64-0.21.5.tgz"
   integrity sha512-tQd/1efJuzPC6rCFwEvLtci/xNFcTZknmXs98FYDfGE4wP9ClFV98nyKrzJKVPMhdDnjzLhdUyMX4PsQAPjwIw==
 
+"@fontsource/inter@^5.2.8":
+  version "5.2.8"
+  resolved "https://registry.npmjs.org/@fontsource/inter/-/inter-5.2.8.tgz"
+  integrity sha512-P6r5WnJoKiNVV+zvW2xM13gNdFhAEpQ9dQJHt3naLvfg+LkF2ldgSLiF4T41lf1SQCM9QmkqPTn4TH568IRagg==
+
+"@fontsource/noto-sans-bengali@^5.2.11":
+  version "5.2.11"
+  resolved "https://registry.npmjs.org/@fontsource/noto-sans-bengali/-/noto-sans-bengali-5.2.11.tgz"
+  integrity sha512-sDCKgC1u83/7JwulfgyvCDab97OkN375RDeGcXtvmI2Vx9ZY5mAcjb4qBtZbv53sL8i+jLawsWvZQVs4zCNkug==
+
 "@jridgewell/gen-mapping@^0.3.12", "@jridgewell/gen-mapping@^0.3.5":
   version "0.3.13"
   resolved "https://registry.npmjs.org/@jridgewell/gen-mapping/-/gen-mapping-0.3.13.tgz"

@@ -14,7 +14,7 @@ function StartScreen({ onStart }) {
   return (
     <div className="start-screen">
       <div className="start-card">
-        <h1 className="bengali">100 MCQ Exam</h1>
+        <h1 className="bengali">GST 100MCQ</h1>
         <div className="exam-info">
           <p className="bengali">সময়: ৬০ মিনিট | মোট নম্বর: ১০০.০ | প্রশ্ন: ১০০</p>
           <p className="bengali">সঠিক: +১ | ভুল: -০.২৫ | পাস মার্ক: ৬০.০</p>

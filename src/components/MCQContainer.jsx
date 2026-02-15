@@ -16,7 +16,7 @@ const STATUS = {
 }
 
 const DURATION_SECONDS = 60 * 60 // 60 minutes
-const MARK_PER_QUESTION = 1.0 // Changed from 1.25 for 100 MCQ
+const MARK_PER_QUESTION = 1.0 // Each correct answer = 1 mark
 const NEGATIVE_MARKING = 0.25
 const PASS_MARK = 60.0 // 100 * 1.0 * 0.60
 
