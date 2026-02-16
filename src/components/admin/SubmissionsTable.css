@@ -168,6 +168,10 @@ table.data-table {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
 }
 
+.modal-content.spectate-modal {
+  max-width: 800px; /* Wider for PC */
+}
+
 .modal-header {
   display: flex;
   justify-content: space-between;
@@ -458,9 +462,9 @@ table.data-table {
 
 .adm-answer-grid {
   display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  gap: 3px;
-  margin-bottom: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); /* Better responsiveness */
+  gap: 6px;
+  margin-bottom: 12px;
 }
 
 .adm-grid-tile {
@@ -468,8 +472,8 @@ table.data-table {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  font-size: 0.65rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
   font-weight: 700;
   border: 1.5px solid transparent;
   cursor: pointer;
@@ -499,9 +503,9 @@ table.data-table {
 
 .adm-grid-tile.active {
   border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3);
-  transform: scale(1.15);
-  z-index: 2;
+  transform: scale(1.1);
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #6366f1;
+  z-index: 5;
 }
 
 .adm-grid-tile:active {

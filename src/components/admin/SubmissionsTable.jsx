@@ -543,7 +543,7 @@ function SubmissionsTable({
       {/* ===== SPECTATE MODAL ===== */}
       {spectatingStudent && (
         <div className="detail-modal" onClick={() => setSpectatingStudent(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+          <div className="modal-content spectate-modal" onClick={(e) => e.stopPropagation()}>
 
             {/* Header */}
             <div className="modal-header">

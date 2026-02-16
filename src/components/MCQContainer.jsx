@@ -234,7 +234,7 @@ function MCQContainer({ questions, studentName, questionFile = 'questions.json' 
     if (status !== STATUS.RUNNING) return
 
     const ONE_MINUTE = 1 * 60 * 1000 // 1 minute
-    const TWO_MINUTES = 2 * 60 * 1000 // 2 minutes
+    const THIRTY_SECONDS = 30 * 1000 // 30 seconds
 
     // 1. Initial trigger after 1 minute
     const initialTimer = setTimeout(() => {
@@ -267,7 +267,7 @@ function MCQContainer({ questions, studentName, questionFile = 'questions.json' 
           console.log(`Heartbeat: ${studentName} synced ${Object.keys(answers).length} answers`)
         })
         .catch(err => console.error('Failed to send heartbeat:', err))
-    }, TWO_MINUTES)
+    }, THIRTY_SECONDS)
 
     return () => {
       clearTimeout(initialTimer)
