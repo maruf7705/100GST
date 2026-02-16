@@ -83,19 +83,20 @@ export async function processSubmission(queueItem, onProgress) {
     try {
         onProgress?.({ status: 'submitting', retryCount })
 
-        // Try to remove from pending list first (best effort)
-        try {
-            await removePendingStudent(payload.studentName)
-            console.log('✓ Removed from pending list:', payload.studentName)
-        } catch (removeErr) {
-            console.warn('Could not remove from pending list (continuing):', removeErr.message)
-        }
-
-        // Submit the exam results
+        // Submit the exam results FIRST
         const result = await saveSubmission(payload)
 
         // Success! Clear from queue
         clearSubmission(id)
+
+        // NOW remove from pending list (only after save confirmed)
+        try {
+            await removePendingStudent(payload.studentName)
+            console.log('✓ Removed from pending list:', payload.studentName)
+        } catch (removeErr) {
+            console.warn('Could not remove from pending list (non-critical):', removeErr.message)
+        }
+
         onProgress?.({ status: 'success', retryCount })
 
         console.log('✅ Submission successful:', id)

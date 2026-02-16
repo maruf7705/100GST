@@ -101,30 +101,46 @@ function AdminPage() {
       }
     })
 
-    // 3. Add pending students who haven't submitted yet and are not too old
+    // 3. Add pending students who are currently taking an exam
     pendingStudents.forEach(pending => {
       const studentKey = pending.studentName
+
+      // Calculate elapsed time
+      const start = new Date(pending.timestamp).getTime()
+      const elapsed = now - start
+
+      // Filter out pending students older than 61 minutes (exam timeout)
+      const SIXTY_ONE_MINUTES_MS = 61 * 60 * 1000;
+      if (elapsed > SIXTY_ONE_MINUTES_MS) return;
+
+      const minutes = Math.floor(elapsed / (1000 * 60))
+      const TIMEOUT_THRESHOLD = 60
+
+      const pendingEntry = {
+        ...pending,
+        studentName: pending.studentName,
+        timestamp: pending.timestamp,
+        status: 'Pending',
+        isPending: true,
+        isExpired: minutes > TIMEOUT_THRESHOLD,
+        elapsedMinutes: minutes
+      }
+
       if (!groups[studentKey]) {
-        // Calculate elapsed time
-        const start = new Date(pending.timestamp).getTime()
-        const elapsed = now - start
+        // No existing submission - show as pending
+        groups[studentKey] = pendingEntry
+      } else {
+        // Student already has a submission. Check if the pending entry is NEWER
+        // (meaning they started a new exam after their last submission)
+        const existingTimestamp = new Date(groups[studentKey].timestamp).getTime()
+        const pendingTimestamp = new Date(pending.timestamp).getTime()
 
-        // Filter out pending students older than 61 minutes (exam timeout)
-        const SIXTY_ONE_MINUTES_MS = 61 * 60 * 1000;
-        if (elapsed > SIXTY_ONE_MINUTES_MS) return;
-
-        const minutes = Math.floor(elapsed / (1000 * 60))
-        const TIMEOUT_THRESHOLD = 60
-
-        // This student is pending and hasn't submitted
-        groups[studentKey] = {
-          ...pending,
-          studentName: pending.studentName,
-          timestamp: pending.timestamp,
-          status: 'Pending',
-          isPending: true,
-          isExpired: minutes > TIMEOUT_THRESHOLD,
-          elapsedMinutes: minutes
+        if (pendingTimestamp > existingTimestamp) {
+          // Keep the old submission under a unique key so it's not lost
+          const oldKey = `${studentKey}_submitted_${groups[studentKey].timestamp}`
+          groups[oldKey] = groups[studentKey]
+          // Replace with the pending entry
+          groups[studentKey] = pendingEntry
         }
       }
     })
