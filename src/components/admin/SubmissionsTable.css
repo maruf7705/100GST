@@ -169,7 +169,8 @@ table.data-table {
 }
 
 .modal-content.spectate-modal {
-  max-width: 800px; /* Wider for PC */
+  max-width: 800px;
+  /* Wider for PC */
 }
 
 .modal-header {
@@ -462,7 +463,8 @@ table.data-table {
 
 .adm-answer-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); /* Better responsiveness */
+  grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+  /* Better responsiveness */
   gap: 6px;
   margin-bottom: 12px;
 }
@@ -836,5 +838,119 @@ table.data-table {
 
   .adm-subject-grid {
     grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ===== SPECTATE DONUT CHART ===== */
+.spectate-chart-section {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 16px;
+}
+
+.spectate-donut-wrap {
+  flex-shrink: 0;
+}
+
+.spectate-donut {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.5s ease;
+}
+
+.spectate-donut-hole {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.spectate-donut-pct {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #1e293b;
+  line-height: 1;
+}
+
+.spectate-donut-label {
+  font-size: 0.65rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.spectate-chart-stats {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.spectate-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  transition: transform 0.15s;
+}
+
+.spectate-stat-item:hover {
+  transform: translateX(3px);
+}
+
+.spectate-stat-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.spectate-stat-val {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.spectate-stat-lbl {
+  display: block;
+  font-size: 0.65rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+@media (max-width: 480px) {
+  .spectate-chart-section {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .spectate-donut {
+    width: 120px;
+    height: 120px;
+  }
+
+  .spectate-donut-hole {
+    width: 76px;
+    height: 76px;
+  }
+
+  .spectate-donut-pct {
+    font-size: 1.3rem;
   }
 }

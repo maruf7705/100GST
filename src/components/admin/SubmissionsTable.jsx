@@ -554,45 +554,68 @@ function SubmissionsTable({
             </div>
 
             <div className="modal-body">
-              {/* Status Info */}
-              <div className="adm-stats-row">
-                <div className="adm-stat">
-                  <span className="adm-stat-num">{spectatingStudent.answeredCount || 0}</span>
-                  <span className="adm-stat-label bengali">উত্তর দিয়েছে</span>
-                </div>
-                <div className="adm-stat">
-                  <span className="adm-stat-num">{spectatingStudent.totalQuestions || '?'}</span>
-                  <span className="adm-stat-label bengali">মোট প্রশ্ন</span>
-                </div>
-                <div className="adm-stat">
-                  <span className="adm-stat-num">{spectatingStudent.currentQuestion || '?'}</span>
-                  <span className="adm-stat-label bengali">বর্তমান প্রশ্ন</span>
-                </div>
-                <div className="adm-stat">
-                  <span className="adm-stat-num">{(() => {
-                    const elapsed = getElapsedTime(spectatingStudent.timestamp)
-                    return `${elapsed.minutes} মি.`
-                  })()}</span>
-                  <span className="adm-stat-label bengali">সময় অতিবাহিত</span>
-                </div>
-              </div>
+              {/* ===== DONUT CHART + STATS ===== */}
+              {(() => {
+                const answered = spectatingStudent.answeredCount || 0
+                const total = spectatingStudent.totalQuestions || 1
+                const pct = Math.round((answered / total) * 100)
+                const elapsed = getElapsedTime(spectatingStudent.timestamp)
+                const timeRemaining = Math.max(0, 60 - elapsed.minutes)
 
-              {/* Progress Bar */}
-              <div style={{ margin: '16px 0' }}>
-                <div className="bengali" style={{ fontSize: '13px', marginBottom: '6px', color: '#666' }}>
-                  অগ্রগতি: {spectatingStudent.answeredCount || 0} / {spectatingStudent.totalQuestions || '?'}
-                </div>
-                <div className="adm-subject-bar-track">
-                  <div
-                    className="adm-subject-bar-fill mid"
-                    style={{
-                      width: `${spectatingStudent.totalQuestions
-                        ? Math.round(((spectatingStudent.answeredCount || 0) / spectatingStudent.totalQuestions) * 100)
-                        : 0}%`
-                    }}
-                  />
-                </div>
-              </div>
+                return (
+                  <div className="spectate-chart-section">
+                    {/* Donut Chart */}
+                    <div className="spectate-donut-wrap">
+                      <div
+                        className="spectate-donut"
+                        style={{
+                          background: `conic-gradient(
+                            #10b981 0deg ${pct * 3.6}deg,
+                            #e2e8f0 ${pct * 3.6}deg 360deg
+                          )`
+                        }}
+                      >
+                        <div className="spectate-donut-hole">
+                          <span className="spectate-donut-pct">{pct}%</span>
+                          <span className="spectate-donut-label bengali">সম্পন্ন</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Stats beside chart */}
+                    <div className="spectate-chart-stats">
+                      <div className="spectate-stat-item">
+                        <span className="spectate-stat-icon">✅</span>
+                        <div>
+                          <span className="spectate-stat-val">{answered}/{total}</span>
+                          <span className="spectate-stat-lbl bengali">উত্তর দিয়েছে</span>
+                        </div>
+                      </div>
+                      <div className="spectate-stat-item">
+                        <span className="spectate-stat-icon">📍</span>
+                        <div>
+                          <span className="spectate-stat-val">প্রশ্ন {spectatingStudent.currentQuestion || '?'}</span>
+                          <span className="spectate-stat-lbl bengali">বর্তমান অবস্থান</span>
+                        </div>
+                      </div>
+                      <div className="spectate-stat-item">
+                        <span className="spectate-stat-icon">⏱️</span>
+                        <div>
+                          <span className="spectate-stat-val">{elapsed.minutes} মি.</span>
+                          <span className="spectate-stat-lbl bengali">অতিবাহিত সময়</span>
+                        </div>
+                      </div>
+                      <div className="spectate-stat-item">
+                        <span className="spectate-stat-icon">{timeRemaining <= 10 ? '🔴' : timeRemaining <= 20 ? '🟡' : '🟢'}</span>
+                        <div>
+                          <span className="spectate-stat-val">{timeRemaining} মি.</span>
+                          <span className="spectate-stat-lbl bengali">বাকি সময়</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })()}
 
               {/* Answer Grid */}
               {spectatingStudent.answers && spectatingStudent.totalQuestions > 0 && (
