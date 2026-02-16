@@ -3,7 +3,7 @@
 Single-page MCQ exam (student) + admin dashboard. Questions/answers stored in GitHub JSON; submissions appended via Vercel serverless API.
 Now supports 80 questions!
 
-**Live Demo:** [https://80-mcq.vercel.app/](https://80-mcq.vercel.app/)
+**Live Demo:** [https://100gst.vercel.app/](https://100gst.vercel.app/)
 
 ## Screenshots
 
