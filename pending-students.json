@@ -4,6 +4,10 @@
     "timestamp": "2026-02-19T18:00:58.861Z",
     "status": "Pending",
     "answers": {
+      "25": "a",
+      "26": "b",
+      "27": "c",
+      "28": "c",
       "50": "c",
       "51": "b",
       "52": "c",
@@ -18,6 +22,15 @@
       "61": "c",
       "62": "c",
       "63": "a",
+      "64": "d",
+      "66": "c",
+      "67": "a",
+      "68": "a",
+      "69": "b",
+      "70": "d",
+      "71": "a",
+      "72": "c",
+      "73": "b",
       "75": "c",
       "76": "c",
       "77": "d",
@@ -45,8 +58,8 @@
       "99": "b",
       "100": "d"
     },
-    "currentQuestion": 63,
-    "answeredCount": 40,
+    "currentQuestion": 29,
+    "answeredCount": 53,
     "totalQuestions": 100,
     "questionFile": "GST-Model-Test-06.json"
   }
