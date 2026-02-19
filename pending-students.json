@@ -20,6 +20,10 @@
       "38": "b",
       "39": "b",
       "40": "c",
+      "41": "a",
+      "42": "b",
+      "44": "c",
+      "45": "c",
       "50": "c",
       "51": "b",
       "52": "c",
@@ -70,8 +74,8 @@
       "99": "b",
       "100": "d"
     },
-    "currentQuestion": 41,
-    "answeredCount": 65,
+    "currentQuestion": 46,
+    "answeredCount": 69,
     "totalQuestions": 100,
     "questionFile": "GST-Model-Test-06.json"
   }
