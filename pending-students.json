@@ -4,6 +4,9 @@
     "timestamp": "2026-02-19T18:00:58.861Z",
     "status": "Pending",
     "answers": {
+      "25": "a",
+      "26": "b",
+      "27": "c",
       "50": "c",
       "51": "b",
       "52": "c",
@@ -54,8 +57,8 @@
       "99": "b",
       "100": "d"
     },
-    "currentQuestion": 74,
-    "answeredCount": 49,
+    "currentQuestion": 28,
+    "answeredCount": 52,
     "totalQuestions": 100,
     "questionFile": "GST-Model-Test-06.json"
   }
