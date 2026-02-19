@@ -159,17 +159,19 @@
   .sidebar-grid {
     padding: var(--spacing-3);
     border-radius: var(--radius-lg);
+    max-height: 72vh;
+    overflow-y: auto;
   }
 
   .questions-grid {
-    /* Auto-fill ensures it fits any screen width without overflow */
-    grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
-    gap: var(--spacing-1);
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 6px;
   }
 
   .question-bubble {
+    aspect-ratio: auto;
+    height: 34px;
     font-size: var(--font-xs);
-    border-radius: 6px;
-    /* Slightly squarer on mobile */
+    border-radius: 8px;
   }
 }
