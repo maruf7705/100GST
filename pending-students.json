@@ -18,10 +18,11 @@
       "115": "b",
       "116": "b",
       "117": "b",
-      "118": "d"
+      "118": "d",
+      "120": "b"
     },
-    "currentQuestion": 19,
-    "answeredCount": 15,
+    "currentQuestion": 21,
+    "answeredCount": 16,
     "totalQuestions": 100,
     "questionFile": "GST-Model-Test-07.json"
   }
