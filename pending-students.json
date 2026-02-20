@@ -27,10 +27,11 @@
       "127": "a",
       "128": "b",
       "129": "a",
-      "130": "b"
+      "130": "b",
+      "131": "d"
     },
-    "currentQuestion": 31,
-    "answeredCount": 24,
+    "currentQuestion": 32,
+    "answeredCount": 25,
     "totalQuestions": 100,
     "questionFile": "GST-Model-Test-07.json"
   }
