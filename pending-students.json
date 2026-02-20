@@ -12,6 +12,8 @@
       "108": "a",
       "109": "b",
       "110": "a",
+      "112": "a",
+      "113": "c",
       "175": "a",
       "176": "b",
       "178": "b",
@@ -29,8 +31,8 @@
       "190": "a",
       "191": "b"
     },
-    "currentQuestion": 12,
-    "answeredCount": 24,
+    "currentQuestion": 14,
+    "answeredCount": 26,
     "totalQuestions": 100,
     "questionFile": "GST-Model-Test-07.json"
   }
