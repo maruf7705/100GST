@@ -11,10 +11,13 @@
       "180": "b",
       "181": "a",
       "182": "c",
-      "183": "a"
+      "183": "a",
+      "184": "a",
+      "185": "a",
+      "186": "a"
     },
-    "currentQuestion": 84,
-    "answeredCount": 8,
+    "currentQuestion": 87,
+    "answeredCount": 11,
     "totalQuestions": 100,
     "questionFile": "GST-Model-Test-07.json"
   }
