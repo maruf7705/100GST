@@ -3,9 +3,12 @@
     "studentName": "Gst^6",
     "timestamp": "2026-02-20T16:42:59.187Z",
     "status": "Pending",
-    "answers": {},
-    "currentQuestion": 1,
-    "answeredCount": 0,
+    "answers": {
+      "101": "c",
+      "102": "c"
+    },
+    "currentQuestion": 3,
+    "answeredCount": 2,
     "totalQuestions": 100,
     "questionFile": "GST-Model-Test-07.json"
   }
