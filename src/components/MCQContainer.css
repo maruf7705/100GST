@@ -8,7 +8,7 @@
 .mcq-content {
   flex: 1;
   display: grid;
-  grid-template-columns: 1fr 320px;
+  grid-template-columns: 1fr min(360px, 30vw);
   gap: var(--spacing-4);
   padding: var(--spacing-4);
   max-width: 1400px;
@@ -18,10 +18,16 @@
 
 .question-section {
   min-width: 0;
-  /* Prevents flex/grid item overflow */
   display: flex;
   flex-direction: column;
   gap: var(--spacing-3);
+}
+
+/* Wide Desktop (> 1200px) — generous sidebar */
+@media (min-width: 1201px) {
+  .mcq-content {
+    grid-template-columns: 1fr 380px;
+  }
 }
 
 /* Tablet / Small Laptop */
@@ -37,7 +43,6 @@
 @media (max-width: 640px) {
   .mcq-content {
     display: flex;
-    /* Switch to flex column for better mobile control */
     flex-direction: column;
     padding: var(--spacing-2);
     gap: var(--spacing-2-5);

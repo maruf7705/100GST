@@ -119,6 +119,8 @@ body {
   position: relative;
   overflow-x: hidden;
   /* Prevent horizontal scroll */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #root {
@@ -185,6 +187,7 @@ html {
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
     font-size: var(--font-base);
+    touch-action: manipulation;
   }
 
   input,
@@ -194,15 +197,22 @@ html {
     /* Forces 16px to prevent iOS zoom */
   }
 
-  /* Ensure minimum touch target size */
+  /* Ensure minimum touch target size — 44px per WCAG */
   button,
   a,
   input[type="button"],
   input[type="submit"],
   .clickable {
-    min-height: 40px;
-    /* Reduced specific min-height for compactness, but still accessible */
-    min-width: 40px;
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+  }
+
+  /* Active press feedback for all buttons on mobile */
+  button:active:not(:disabled),
+  .clickable:active {
+    opacity: 0.85;
+    transform: scale(0.97);
   }
 }
 

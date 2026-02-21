@@ -1,3 +1,4 @@
+/* ─── Sidebar Container ─── */
 .sidebar-grid {
   background: white;
   border-radius: var(--radius-xl);
@@ -7,10 +8,10 @@
   position: sticky;
   top: 20px;
   border: 1px solid var(--slate-100);
-  max-width: 420px;
   width: 100%;
 }
 
+/* ─── Header ─── */
 .sidebar-header h3 {
   font-size: var(--font-lg);
   font-weight: 700;
@@ -21,6 +22,7 @@
   gap: 8px;
 }
 
+/* ─── Legend ─── */
 .legend {
   display: flex;
   flex-wrap: wrap;
@@ -44,6 +46,7 @@
   height: 12px;
   border-radius: 4px;
   display: inline-block;
+  flex-shrink: 0;
 }
 
 .legend-dot.unvisited {
@@ -53,56 +56,46 @@
 
 .legend-dot.visited {
   background: var(--warning-light);
+  border: 2px dashed var(--warning);
 }
 
 .legend-dot.answered {
   background: var(--success);
+  border: 2px solid var(--success-dark);
 }
 
 .legend-dot.marked {
-  background: var(--primary);
-  /* Changed to primary to match review badge usually */
-  /* Wait, review badge was warning in QuestionCard. Let's keep consistency. 
-     In QuestionCard.css, review badge is warning. 
-     In SidebarGrid logic (read earlier), .marked used warning colors.
-  */
-  background: var(--slate-600);
-  /* Neutral for 'marked' if it means 'review' */
+  background: #8b5cf6;
+  border: 2px dotted #7c3aed;
 }
 
-/* Re-reading original logic:
-   visited -> #fbbf24 (warning-ish)
-   answered -> success
-   marked -> warning
-   
-   Let's stick to consistent semantic colors from index.css
-*/
-.legend-dot.marked {
-  background: var(--slate-500);
-  /* Distinct from visited */
-}
-
-
+/* ─── Question Grid ─── */
 .questions-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
   gap: var(--spacing-2);
 }
 
+/* ─── Question Bubble ─── */
 .question-bubble {
   aspect-ratio: 1;
-  border: 1px solid var(--slate-300);
+  border: 2px solid var(--slate-300);
   border-radius: var(--radius-md);
   background: white;
   font-weight: 600;
   font-size: var(--font-sm);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
   color: var(--slate-700);
   display: flex;
   align-items: center;
   justify-content: center;
   user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(37, 99, 235, 0.15);
+  min-width: 44px;
+  min-height: 44px;
+  position: relative;
 }
 
 .question-bubble:hover {
@@ -111,38 +104,79 @@
   box-shadow: var(--shadow-sm);
 }
 
+/* Active press feedback for touch */
+.question-bubble:active {
+  transform: scale(0.93);
+  opacity: 0.85;
+}
+
+/* ─── Status Styles ─── */
 .question-bubble.unvisited {
   background: var(--slate-50);
+  border-color: var(--slate-300);
+  border-style: solid;
 }
 
 .question-bubble.visited {
   background: var(--warning-soft);
   border-color: var(--warning);
-  color: var(--warning-dark);
-  /* Ensure text contrast */
+  border-style: dashed;
+  color: #92400e;
 }
-
-/* Specific overwrite for visited text color if needed, but var(--warning) is usually readable on soft bg */
 
 .question-bubble.answered {
   background: var(--success);
-  border-color: var(--success);
+  border-color: var(--success-dark);
+  border-style: solid;
+  border-width: 2px;
   color: white;
+}
+
+/* Status dot indicator for answered (beyond color) */
+.question-bubble.answered::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 6px;
+  height: 6px;
+  background: white;
+  border-radius: 50%;
 }
 
 .question-bubble.marked {
-  background: var(--slate-600);
-  border-color: var(--slate-600);
+  background: #8b5cf6;
+  border-color: #7c3aed;
+  border-style: dotted;
+  border-width: 2px;
   color: white;
 }
 
-.question-bubble.active {
-  ring: 2px solid var(--primary);
-  ring-offset: 2px;
-  z-index: 1;
+/* Status dot indicator for marked */
+.question-bubble.marked::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 6px;
+  height: 6px;
+  background: #fbbf24;
+  border-radius: 50%;
 }
 
-/* Tablet */
+.question-bubble.active {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+  z-index: 1;
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  border-style: solid;
+  color: var(--primary-dark);
+  font-weight: 700;
+}
+
+/* ─── Tablet (≤ 1024px) ─── */
 @media (max-width: 1024px) {
   .sidebar-grid {
     position: static;
@@ -150,17 +184,29 @@
   }
 
   .questions-grid {
-    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
   }
 }
 
-/* Mobile */
+/* ─── Mobile (≤ 640px) ─── */
 @media (max-width: 640px) {
   .sidebar-grid {
     padding: var(--spacing-3);
     border-radius: var(--radius-lg);
-    max-height: 72vh;
+    max-height: 60vh;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .sidebar-header h3 {
+    font-size: var(--font-base);
+    margin-bottom: var(--spacing-2);
+  }
+
+  .legend {
+    gap: var(--spacing-1) var(--spacing-2);
+    margin-bottom: var(--spacing-2);
+    padding-bottom: var(--spacing-2);
   }
 
   .questions-grid {
@@ -170,8 +216,21 @@
 
   .question-bubble {
     aspect-ratio: auto;
-    height: 34px;
+    min-height: 44px;
+    height: 44px;
     font-size: var(--font-xs);
     border-radius: 8px;
+  }
+
+  .question-bubble:hover {
+    transform: none;
+  }
+
+  .question-bubble.answered::after,
+  .question-bubble.marked::after {
+    width: 5px;
+    height: 5px;
+    top: 2px;
+    right: 2px;
   }
 }

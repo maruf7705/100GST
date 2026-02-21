@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import ExamHeader from './ExamHeader'
 import QuestionCard from './QuestionCard'
 import SidebarGrid from './SidebarGrid'
@@ -19,6 +19,7 @@ const DURATION_SECONDS = 60 * 60 // 60 minutes
 const MARK_PER_QUESTION = 1.0 // Each correct answer = 1 mark
 const NEGATIVE_MARKING = 0.25
 const PASS_MARK = 60.0 // 100 * 1.0 * 0.60
+const SAVE_THROTTLE_MS = 5000 // Throttle localStorage writes to every 5 seconds
 
 function MCQContainer({ questions, studentName, questionFile = 'questions.json' }) {
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
@@ -31,6 +32,16 @@ function MCQContainer({ questions, studentName, questionFile = 'questions.json' 
   const [examStartTime] = useState(Date.now()) // Track when exam started (used for local display only)
   const [pendingSent, setPendingSent] = useState(false) // Track if pending status was sent
   const [submissionStatus, setSubmissionStatus] = useState({ status: 'idle', retryCount: 0 })
+
+  // Refs for throttled save
+  const lastSaveRef = useRef(0)
+  const saveTimerRef = useRef(null)
+  const timeLeftRef = useRef(timeLeft)
+
+  // Keep timeLeftRef in sync without triggering re-renders
+  useEffect(() => {
+    timeLeftRef.current = timeLeft
+  }, [timeLeft])
 
   // All useCallback hooks must be defined before any returns
   const handleAnswerSelect = useCallback((questionId, optionId) => {
@@ -164,6 +175,32 @@ function MCQContainer({ questions, studentName, questionFile = 'questions.json' 
     })
   }, [status, studentName, answers, questions, calculateScore, questionFile])
 
+  // Throttled save to localStorage — avoids synchronous write every second
+  const saveStateToStorage = useCallback(() => {
+    if (status !== STATUS.RUNNING) return
+
+    const now = Date.now()
+    const state = {
+      answers,
+      currentIndex: currentQuestionIndex,
+      timeLeft: timeLeftRef.current,
+      visited: Array.from(visitedQuestions),
+      marked: Array.from(markedForReview)
+    }
+
+    if (now - lastSaveRef.current >= SAVE_THROTTLE_MS) {
+      localStorage.setItem(`mcq_state_v100_${studentName}`, JSON.stringify(state))
+      lastSaveRef.current = now
+    } else {
+      // Schedule a trailing save
+      clearTimeout(saveTimerRef.current)
+      saveTimerRef.current = setTimeout(() => {
+        localStorage.setItem(`mcq_state_v100_${studentName}`, JSON.stringify(state))
+        lastSaveRef.current = Date.now()
+      }, SAVE_THROTTLE_MS)
+    }
+  }, [answers, currentQuestionIndex, visitedQuestions, markedForReview, status, studentName])
+
   // All useEffect hooks must be called before any returns
   useEffect(() => {
     if (!questions || questions.length === 0) return
@@ -184,18 +221,11 @@ function MCQContainer({ questions, studentName, questionFile = 'questions.json' 
     }
   }, [studentName, questions])
 
+  // Save on meaningful state changes (NOT on every timeLeft tick)
   useEffect(() => {
-    if (status === STATUS.RUNNING) {
-      const state = {
-        answers,
-        currentIndex: currentQuestionIndex,
-        timeLeft,
-        visited: Array.from(visitedQuestions),
-        marked: Array.from(markedForReview)
-      }
-      localStorage.setItem(`mcq_state_v100_${studentName}`, JSON.stringify(state))
-    }
-  }, [answers, currentQuestionIndex, timeLeft, visitedQuestions, markedForReview, status, studentName])
+    saveStateToStorage()
+    return () => clearTimeout(saveTimerRef.current)
+  }, [saveStateToStorage])
 
   // Timer - must be after handleSubmit definition
   useEffect(() => {
@@ -407,5 +437,3 @@ function MCQContainer({ questions, studentName, questionFile = 'questions.json' 
 }
 
 export default MCQContainer
-
-
