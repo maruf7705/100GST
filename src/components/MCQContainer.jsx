@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import ExamHeader from './ExamHeader'
 import QuestionCard from './QuestionCard'
-import SidebarGrid from './SidebarGrid'
+import QuestionNavigator from './QuestionNavigator'
 import ResultSummary from './ResultSummary'
 import SubmissionStatus from './SubmissionStatus'
 import { saveSubmission, savePendingStudent, removePendingStudent } from '../utils/api'
@@ -399,7 +399,7 @@ function MCQContainer({ questions, studentName, questionFile = 'questions.json' 
               onSubmit={handleSubmit}
             />
           </div>
-          <SidebarGrid
+          <QuestionNavigator
             totalQuestions={questions.length}
             currentIndex={safeIndex}
             answers={answers}
