@@ -462,6 +462,8 @@ function MCQContainer({ questions, studentName, questionFile = 'questions.json' 
               onNext={handleNext}
               canGoPrev={safeIndex > 0}
               canGoNext={safeIndex < questions.length - 1}
+              isMarked={markedForReview.has(safeIndex)}
+              onToggleMark={toggleMarkForReview}
               onSubmit={handleSubmit}
             />
           </div>

@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useSwipe } from '../hooks/useSwipe'
 import { renderLatex } from '../utils/latex'
 import './QuestionCard.css'
@@ -12,10 +11,10 @@ function QuestionCard({
   onNext,
   canGoPrev,
   canGoNext,
+  isMarked,
+  onToggleMark,
   onSubmit
 }) {
-  const [showExitConfirm, setShowExitConfirm] = useState(false)
-
   const swipeHandlers = useSwipe(
     () => canGoNext && onNext(),
     () => canGoPrev && onPrev()
@@ -30,6 +29,7 @@ function QuestionCard({
     >
       <div className="question-header">
         <span className="question-badge bengali">প্রশ্ন {questionNumber}</span>
+        {isMarked && <span className="review-badge bengali">রিভিউ</span>}
       </div>
 
       <div className="question-text bengali" dangerouslySetInnerHTML={{ __html: renderLatex(question.question) }} />
@@ -44,7 +44,7 @@ function QuestionCard({
           return (
             <button
               key={option.id}
-              className={`option - card ${isSelected ? 'selected' : ''} `}
+              className={`option-card ${isSelected ? 'selected' : ''}`}
               onClick={() => onAnswerSelect(question.id, option.id)}
             >
               <span className="option-label">{option.id})</span>
@@ -56,14 +56,13 @@ function QuestionCard({
       </div>
 
       <div className="question-actions">
-        {/* Exit Button — replaces Review */}
         <button
-          className="action-btn exit-btn"
-          onClick={() => setShowExitConfirm(true)}
+          className="action-btn secondary"
+          onClick={onToggleMark}
         >
-          <span className="bengali">✕ বের হন</span>
+          {isMarked ? '✓ ' : ''}
+          <span className="bengali">রিভিউ</span>
         </button>
-
         <div className="nav-buttons">
           <button
             className="action-btn"
@@ -89,72 +88,10 @@ function QuestionCard({
           )}
         </div>
       </div>
-
-      {/* Exit Confirm Popup */}
-      {showExitConfirm && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.55)',
-            zIndex: 9999,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '20px'
-          }}
-          onClick={() => setShowExitConfirm(false)}
-        >
-          <div
-            style={{
-              background: 'white',
-              borderRadius: '16px',
-              padding: '28px 24px',
-              maxWidth: '340px',
-              width: '100%',
-              textAlign: 'center',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.18)'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ fontSize: '40px', marginBottom: '12px' }}>⚠️</div>
-            <h3 className="bengali" style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px', color: '#1e293b' }}>
-              পরীক্ষা থেকে বের হবেন?
-            </h3>
-            <p className="bengali" style={{ color: '#64748b', fontSize: '14px', marginBottom: '24px', lineHeight: 1.6 }}>
-              আপনি যতটুকু উত্তর দিয়েছেন সেটা সাবমিট হয়ে যাবে।<br />এরপর আর পরিবর্তন করা যাবে না।
-            </p>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-              <button
-                className="bengali"
-                style={{
-                  flex: 1, padding: '12px', borderRadius: '10px', border: 'none',
-                  background: '#ef4444', color: 'white', fontWeight: 700, fontSize: '15px', cursor: 'pointer'
-                }}
-                onClick={() => {
-                  setShowExitConfirm(false)
-                  onSubmit()
-                }}
-              >
-                হ্যাঁ, বের হই
-              </button>
-              <button
-                className="bengali"
-                style={{
-                  flex: 1, padding: '12px', borderRadius: '10px',
-                  border: '1.5px solid #e2e8f0', background: 'white',
-                  color: '#374151', fontWeight: 600, fontSize: '15px', cursor: 'pointer'
-                }}
-                onClick={() => setShowExitConfirm(false)}
-              >
-                না, থাকি
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
 
 export default QuestionCard
+
+
