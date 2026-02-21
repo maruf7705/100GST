@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import ExamHeader from './ExamHeader'
 import QuestionCard from './QuestionCard'
-import SidebarGrid from './SidebarGrid'
+import QuestionNavigator from './QuestionNavigator'
 import ResultSummary from './ResultSummary'
 import SubmissionStatus from './SubmissionStatus'
 import { saveSubmission, savePendingStudent, removePendingStudent } from '../utils/api'
@@ -28,10 +28,13 @@ function MCQContainer({ questions, studentName, questionFile = 'questions.json' 
   const [answers, setAnswers] = useState({})
   const [visitedQuestions, setVisitedQuestions] = useState(new Set([0]))
   const [timeLeft, setTimeLeft] = useState(DURATION_SECONDS)
-  const [markedForReview, setMarkedForReview] = useState(new Set())
-  const [examStartTime] = useState(Date.now()) // Track when exam started (used for local display only)
-  const [pendingSent, setPendingSent] = useState(false) // Track if pending status was sent
+  const [showExitConfirm, setShowExitConfirm] = useState(false)
+  // WK-4 fix: useRef instead of useState so guard works reliably across re-renders
+  const pendingSentRef = useRef(false)
   const [submissionStatus, setSubmissionStatus] = useState({ status: 'idle', retryCount: 0 })
+
+  // examStartTime stored in a ref AND persisted in localStorage so it survives tab switches/refreshes
+  const examStartTimeRef = useRef(null)
 
   // Refs for throttled save
   const lastSaveRef = useRef(0)
@@ -184,8 +187,9 @@ function MCQContainer({ questions, studentName, questionFile = 'questions.json' 
       answers,
       currentIndex: currentQuestionIndex,
       timeLeft: timeLeftRef.current,
-      visited: Array.from(visitedQuestions),
-      marked: Array.from(markedForReview)
+      // CRITICAL: always persist the real start time so tab-switching can't cheat the timer
+      examStartTime: examStartTimeRef.current,
+      visited: Array.from(visitedQuestions)
     }
 
     if (now - lastSaveRef.current >= SAVE_THROTTLE_MS) {
@@ -199,7 +203,11 @@ function MCQContainer({ questions, studentName, questionFile = 'questions.json' 
         lastSaveRef.current = Date.now()
       }, SAVE_THROTTLE_MS)
     }
-  }, [answers, currentQuestionIndex, visitedQuestions, markedForReview, status, studentName])
+  }, [answers, currentQuestionIndex, visitedQuestions, status, studentName])
+
+  const handleExit = useCallback(() => {
+    setShowExitConfirm(true)
+  }, [])
 
   // All useEffect hooks must be called before any returns
   useEffect(() => {
@@ -212,12 +220,29 @@ function MCQContainer({ questions, studentName, questionFile = 'questions.json' 
         setAnswers(data.answers || {})
         const maxIndex = Math.max(0, questions.length - 1)
         setCurrentQuestionIndex(Math.min(data.currentIndex || 0, maxIndex))
-        setTimeLeft(data.timeLeft ?? DURATION_SECONDS)
         setVisitedQuestions(new Set(data.visited || [0]))
         setMarkedForReview(new Set(data.marked || []))
+
+        // Restore wall-clock start time so timer can't be cheated by tab switching
+        if (data.examStartTime) {
+          examStartTimeRef.current = data.examStartTime
+          // Compute REAL time left using wall-clock, not saved snapshot
+          const elapsed = Math.floor((Date.now() - data.examStartTime) / 1000)
+          const realTimeLeft = Math.max(DURATION_SECONDS - elapsed, 0)
+          setTimeLeft(realTimeLeft)
+        } else {
+          // First ever load — record the real start time
+          const now = Date.now()
+          examStartTimeRef.current = now
+          setTimeLeft(data.timeLeft ?? DURATION_SECONDS)
+        }
       } catch (e) {
         console.error('Failed to load saved state', e)
       }
+    } else {
+      // Brand new exam — record start time
+      const now = Date.now()
+      examStartTimeRef.current = now
     }
   }, [studentName, questions])
 
@@ -227,22 +252,53 @@ function MCQContainer({ questions, studentName, questionFile = 'questions.json' 
     return () => clearTimeout(saveTimerRef.current)
   }, [saveStateToStorage])
 
-  // Timer - must be after handleSubmit definition
+  // Timer — uses wall-clock (Date.now) so background tabs / mobile tab-switching cannot cheat
   useEffect(() => {
     if (status !== STATUS.RUNNING || timeLeft <= 0) return
 
     const interval = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          handleSubmit()
-          return 0
-        }
-        return prev - 1
-      })
+      if (!examStartTimeRef.current) return
+      const elapsed = Math.floor((Date.now() - examStartTimeRef.current) / 1000)
+      const remaining = Math.max(DURATION_SECONDS - elapsed, 0)
+      setTimeLeft(remaining)
+      if (remaining <= 0) {
+        handleSubmit()
+      }
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [status, timeLeft, handleSubmit])
+  }, [status, handleSubmit])
+
+  // Correct timer & send Spectre heartbeat when tab becomes visible again after being hidden
+  useEffect(() => {
+    if (status !== STATUS.RUNNING) return
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // Correct the timer immediately using real wall-clock
+        if (examStartTimeRef.current) {
+          const elapsed = Math.floor((Date.now() - examStartTimeRef.current) / 1000)
+          const remaining = Math.max(DURATION_SECONDS - elapsed, 0)
+          setTimeLeft(remaining)
+          if (remaining <= 0) {
+            handleSubmit()
+            return
+          }
+        }
+        // Send Spectre heartbeat so admin sees the student is still active
+        savePendingStudent(studentName, null, {
+          answers,
+          currentQuestion: currentQuestionIndex + 1,
+          answeredCount: Object.keys(answers).length,
+          totalQuestions: questions?.length || 0,
+          questionFile
+        }).catch(err => console.error('Visibility heartbeat failed:', err))
+      }
+    }
+
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange)
+  }, [status, studentName, answers, currentQuestionIndex, questions, questionFile, handleSubmit])
 
   // Safety check for current question index
   useEffect(() => {
@@ -251,17 +307,18 @@ function MCQContainer({ questions, studentName, questionFile = 'questions.json' 
     }
   }, [currentQuestionIndex, questions])
 
-  // Track pending students - First after 1 minute, then every 5 minutes
+  // Track pending students - First after 1 minute (registered with Spectre), then heartbeat every 2 min
+  // 2 min interval = 4x fewer Vercel invocations vs 30s (saves monthly quota)
   useEffect(() => {
     if (status !== STATUS.RUNNING) return
 
-    const ONE_MINUTE = 1 * 60 * 1000 // 1 minute
-    const THIRTY_SECONDS = 30 * 1000 // 30 seconds
+    const ONE_MINUTE = 1 * 60 * 1000
+    const TWO_MINUTES = 2 * 60 * 1000
 
-    // 1. Initial trigger after 1 minute
+    // 1. Initial trigger after 1 minute — register student with Spectre
     const initialTimer = setTimeout(() => {
-      if (!pendingSent) {
-        setPendingSent(true)
+      if (!pendingSentRef.current) {
+        pendingSentRef.current = true  // WK-4: ref guard, never resets between renders
         savePendingStudent(studentName, null, {
           answers,
           currentQuestion: currentQuestionIndex + 1,
@@ -269,13 +326,29 @@ function MCQContainer({ questions, studentName, questionFile = 'questions.json' 
           totalQuestions: questions.length,
           questionFile
         })
-          .then(() => {
+          .then((result) => {
+            // WK-5: Re-anchor exam clock to SERVER time to defeat localStorage tampering
+            // Server returns serverTimestamp = when the heartbeat was received (1 min into exam)
+            if (result?.serverTimestamp) {
+              const serverNow = new Date(result.serverTimestamp).getTime()
+              // Exam really started ~1 minute before this heartbeat
+              const serverExamStart = serverNow - ONE_MINUTE
+              // Only recalibrate if the drift is more than 5s (avoids noise)
+              if (Math.abs(examStartTimeRef.current - serverExamStart) > 5000) {
+                console.warn('Clock recalibrated from server:', {
+                  local: new Date(examStartTimeRef.current).toISOString(),
+                  server: new Date(serverExamStart).toISOString()
+                })
+                examStartTimeRef.current = serverExamStart
+              }
+            }
           })
           .catch(err => console.error('Failed to save pending student (1 min):', err))
       }
     }, ONE_MINUTE)
 
-    // 2. Heartbeat every 30 seconds (syncs answers for spectate)
+    // 2. Heartbeat every 2 minutes (syncs answers for Spectre live view)
+    // Was 30s → now 2min: saves ~75% Vercel function calls per exam
     const heartbeatInterval = setInterval(() => {
       savePendingStudent(studentName, null, {
         answers,
@@ -285,13 +358,13 @@ function MCQContainer({ questions, studentName, questionFile = 'questions.json' 
         questionFile
       })
         .catch(err => console.error('Failed to send heartbeat:', err))
-    }, THIRTY_SECONDS)
+    }, TWO_MINUTES)
 
     return () => {
       clearTimeout(initialTimer)
       clearInterval(heartbeatInterval)
     }
-  }, [status, pendingSent, studentName, answers, currentQuestionIndex, questions, questionFile])
+  }, [status, studentName, answers, currentQuestionIndex, questions, questionFile])
 
   // Background sync for pending submissions (network reconnection handling)
   useEffect(() => {
@@ -394,23 +467,74 @@ function MCQContainer({ questions, studentName, questionFile = 'questions.json' 
               onNext={handleNext}
               canGoPrev={safeIndex > 0}
               canGoNext={safeIndex < questions.length - 1}
-              isMarked={markedForReview.has(safeIndex)}
-              onToggleMark={toggleMarkForReview}
               onSubmit={handleSubmit}
+              onExit={handleExit}
             />
           </div>
-          <SidebarGrid
+          <QuestionNavigator
             totalQuestions={questions.length}
             currentIndex={safeIndex}
             answers={answers}
             questions={questions}
             visitedQuestions={visitedQuestions}
-            markedQuestions={markedForReview}
             onQuestionJump={handleQuestionJump}
           />
         </div>
 
         <SubmissionStatus {...submissionStatus} />
+
+        {/* Exit Confirm Popup */}
+        {showExitConfirm && (
+          <div
+            style={{
+              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              zIndex: 1000, padding: '20px'
+            }}
+            onClick={() => setShowExitConfirm(false)}
+          >
+            <div
+              style={{
+                background: 'white', borderRadius: '16px', padding: '32px 28px',
+                maxWidth: '360px', width: '100%', textAlign: 'center',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+              }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div style={{ fontSize: '40px', marginBottom: '12px' }}>⚠️</div>
+              <h3 className="bengali" style={{ fontSize: '1.2rem', fontWeight: '700', marginBottom: '10px', color: '#1e293b' }}>
+                পরীক্ষা থেকে বের হবেন?
+              </h3>
+              <p className="bengali" style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: '1.6', marginBottom: '24px' }}>
+                এখন পর্যন্ত যতটুকু উত্তর দিয়েছেন সেটা সাবমিট হয়ে যাবে।
+              </p>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                <button
+                  className="bengali"
+                  onClick={() => setShowExitConfirm(false)}
+                  style={{
+                    flex: 1, padding: '12px', border: '1.5px solid #e2e8f0',
+                    borderRadius: '10px', background: 'white', color: '#475569',
+                    fontWeight: '600', fontSize: '1rem', cursor: 'pointer'
+                  }}
+                >
+                  না, থাকব
+                </button>
+                <button
+                  className="bengali"
+                  onClick={() => { setShowExitConfirm(false); handleSubmit() }}
+                  style={{
+                    flex: 1, padding: '12px', border: 'none',
+                    borderRadius: '10px', background: '#dc2626', color: 'white',
+                    fontWeight: '700', fontSize: '1rem', cursor: 'pointer'
+                  }}
+                >
+                  হ্যাঁ, সাবমিট
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     )
   } catch (error) {

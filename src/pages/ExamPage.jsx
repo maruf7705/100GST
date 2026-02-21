@@ -22,28 +22,23 @@ function ExamPage() {
 
   async function loadQuestions() {
     try {
-      // Get the active question file from config
       const activeConfig = await getActiveQuestionFile()
       const file = activeConfig.activeFile || 'questions.json'
 
       setQuestionFile(file)
 
-      // Add cache buster to ensure fresh data
       const cacheBuster = `?t=${Date.now()}`
       const fileUrl = `/${file}${cacheBuster}`
 
       const res = await fetch(fileUrl, {
         cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate'
-        }
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
       })
 
       if (!res.ok) {
         throw new Error(`Failed to load questions: ${res.status} ${res.statusText}`)
       }
 
-      // Check if response is actually JSON
       const contentType = res.headers.get('content-type')
       if (!contentType || !contentType.includes('application/json')) {
         throw new Error(`File ${file} is not a JSON file. Got content-type: ${contentType}`)
@@ -51,12 +46,10 @@ function ExamPage() {
 
       const data = await res.json()
 
-      // Validate data
       if (!Array.isArray(data) || data.length === 0) {
         throw new Error('No questions found in file')
       }
 
-      // Transform questions to match expected format
       const transformed = data.map(q => ({
         id: q.id,
         question: q.question,
@@ -92,14 +85,9 @@ function ExamPage() {
   if (error) {
     return (
       <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh',
-        flexDirection: 'column',
-        gap: '16px',
-        padding: '20px',
-        textAlign: 'center'
+        display: 'flex', justifyContent: 'center', alignItems: 'center',
+        minHeight: '100vh', flexDirection: 'column', gap: '16px',
+        padding: '20px', textAlign: 'center'
       }}>
         <div style={{ color: 'var(--error)', fontSize: '18px' }} className="bengali">
           প্রশ্ন লোড করতে সমস্যা হয়েছে
@@ -110,14 +98,8 @@ function ExamPage() {
         <button
           onClick={loadQuestions}
           style={{
-            padding: '12px 24px',
-            backgroundColor: 'var(--primary)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '16px',
-            marginTop: '16px'
+            padding: '12px 24px', backgroundColor: 'var(--primary)', color: 'white',
+            border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', marginTop: '16px'
           }}
           className="bengali"
         >
@@ -142,5 +124,3 @@ function ExamPage() {
 }
 
 export default ExamPage
-
-
