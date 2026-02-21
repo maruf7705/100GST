@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import MCQContainer from '../components/MCQContainer'
 import StartScreen from '../components/StartScreen'
 import ErrorBoundary from '../components/ErrorBoundary'
-import { getActiveQuestionFile } from '../utils/api'
+import { getActiveQuestionFile, loadSubmissions } from '../utils/api'
 
 function ExamPage() {
   const [studentName, setStudentName] = useState(() => {
@@ -15,6 +15,8 @@ function ExamPage() {
   const [questionFile, setQuestionFile] = useState('questions.json')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  // WK-6: track if student already submitted (block re-submission)
+  const [alreadySubmitted, setAlreadySubmitted] = useState(false)
 
   useEffect(() => {
     loadQuestions()
@@ -127,11 +129,43 @@ function ExamPage() {
     )
   }
 
+  // WK-6: Check if student already has a submission before allowing exam start
+  async function handleStudentStart(name) {
+    try {
+      const submissions = await loadSubmissions()
+      const existing = submissions.find(s => s.studentName === name)
+      if (existing) {
+        setAlreadySubmitted(true)
+        setStudentName(name)   // needed to show the block screen with the name
+        return
+      }
+    } catch (e) {
+      // If we can't check, allow them in (fail open - better UX than blocking everyone)
+      console.warn('Could not verify submission status:', e.message)
+    }
+    localStorage.setItem('exam_session_student', name)
+    setStudentName(name)
+  }
+
+  if (alreadySubmitted) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'var(--gray-50)', padding: '20px' }}>
+        <div style={{ background: 'white', padding: '32px', borderRadius: '12px', boxShadow: '0 4px 24px rgba(0,0,0,0.1)', textAlign: 'center', maxWidth: '380px' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>⛔</div>
+          <h2 className="bengali" style={{ color: 'var(--error)', marginBottom: '12px' }}>আপনি আগেই পরীক্ষা দিয়েছেন</h2>
+          <p className="bengali" style={{ color: 'var(--gray-600)', lineHeight: '1.6' }}>
+            <strong>{studentName}</strong> নামে একটি submission আগেই সার্ভারে বিদ্যমান আছে। পুনরায় পরীক্ষা দেওয়া যাবে না।
+          </p>
+          <p className="bengali" style={{ color: 'var(--gray-500)', fontSize: '13px', marginTop: '16px' }}>
+            যদি ভুল হয়ে থাকে, আপনার শিক্ষককে জানান।
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   if (!studentName) {
-    return <StartScreen onStart={(name) => {
-      localStorage.setItem('exam_session_student', name)
-      setStudentName(name)
-    }} />
+    return <StartScreen onStart={handleStudentStart} />
   }
 
   return (

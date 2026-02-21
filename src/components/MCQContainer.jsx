@@ -29,7 +29,8 @@ function MCQContainer({ questions, studentName, questionFile = 'questions.json' 
   const [visitedQuestions, setVisitedQuestions] = useState(new Set([0]))
   const [timeLeft, setTimeLeft] = useState(DURATION_SECONDS)
   const [markedForReview, setMarkedForReview] = useState(new Set())
-  const [pendingSent, setPendingSent] = useState(false) // Track if pending status was sent
+  // WK-4 fix: useRef instead of useState so guard works reliably across re-renders without triggering new effects
+  const pendingSentRef = useRef(false)
   const [submissionStatus, setSubmissionStatus] = useState({ status: 'idle', retryCount: 0 })
 
   // examStartTime stored in a ref AND persisted in localStorage so it survives tab switches/refreshes
@@ -303,17 +304,17 @@ function MCQContainer({ questions, studentName, questionFile = 'questions.json' 
     }
   }, [currentQuestionIndex, questions])
 
-  // Track pending students - First after 1 minute, then every 5 minutes
+  // Track pending students - First after 1 minute (registered with Spectre), then heartbeat every 30s
   useEffect(() => {
     if (status !== STATUS.RUNNING) return
 
-    const ONE_MINUTE = 1 * 60 * 1000 // 1 minute
-    const THIRTY_SECONDS = 30 * 1000 // 30 seconds
+    const ONE_MINUTE = 1 * 60 * 1000
+    const THIRTY_SECONDS = 30 * 1000
 
-    // 1. Initial trigger after 1 minute
+    // 1. Initial trigger after 1 minute — register student with Spectre
     const initialTimer = setTimeout(() => {
-      if (!pendingSent) {
-        setPendingSent(true)
+      if (!pendingSentRef.current) {
+        pendingSentRef.current = true  // WK-4: ref guard, never resets between renders
         savePendingStudent(studentName, null, {
           answers,
           currentQuestion: currentQuestionIndex + 1,
@@ -321,13 +322,28 @@ function MCQContainer({ questions, studentName, questionFile = 'questions.json' 
           totalQuestions: questions.length,
           questionFile
         })
-          .then(() => {
+          .then((result) => {
+            // WK-5: Re-anchor exam clock to SERVER time to defeat localStorage tampering
+            // Server returns serverTimestamp = when the heartbeat was received (1 min into exam)
+            if (result?.serverTimestamp) {
+              const serverNow = new Date(result.serverTimestamp).getTime()
+              // Exam really started ~1 minute before this heartbeat
+              const serverExamStart = serverNow - ONE_MINUTE
+              // Only recalibrate if the drift is more than 5s (avoids noise)
+              if (Math.abs(examStartTimeRef.current - serverExamStart) > 5000) {
+                console.warn('Clock recalibrated from server:', {
+                  local: new Date(examStartTimeRef.current).toISOString(),
+                  server: new Date(serverExamStart).toISOString()
+                })
+                examStartTimeRef.current = serverExamStart
+              }
+            }
           })
           .catch(err => console.error('Failed to save pending student (1 min):', err))
       }
     }, ONE_MINUTE)
 
-    // 2. Heartbeat every 30 seconds (syncs answers for spectate)
+    // 2. Heartbeat every 30 seconds (syncs answers for Spectre live view)
     const heartbeatInterval = setInterval(() => {
       savePendingStudent(studentName, null, {
         answers,
@@ -343,7 +359,7 @@ function MCQContainer({ questions, studentName, questionFile = 'questions.json' 
       clearTimeout(initialTimer)
       clearInterval(heartbeatInterval)
     }
-  }, [status, pendingSent, studentName, answers, currentQuestionIndex, questions, questionFile])
+  }, [status, studentName, answers, currentQuestionIndex, questions, questionFile])
 
   // Background sync for pending submissions (network reconnection handling)
   useEffect(() => {
@@ -446,8 +462,6 @@ function MCQContainer({ questions, studentName, questionFile = 'questions.json' 
               onNext={handleNext}
               canGoPrev={safeIndex > 0}
               canGoNext={safeIndex < questions.length - 1}
-              isMarked={markedForReview.has(safeIndex)}
-              onToggleMark={toggleMarkForReview}
               onSubmit={handleSubmit}
             />
           </div>

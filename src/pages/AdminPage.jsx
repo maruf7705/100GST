@@ -1,11 +1,50 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { loadSubmissions, deleteSubmission, deleteStudent, loadPendingStudents, removePendingStudent } from '../utils/api'
 import SubmissionsTable from '../components/admin/SubmissionsTable'
 import NotificationToast from '../components/admin/NotificationToast'
 import QuestionSetModal from '../components/admin/QuestionSetModal'
 import './AdminPage.css'
 
+// Simple admin password gate — stored in sessionStorage so it survives page refresh but clears on browser close
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'admin123'
+
+function AdminPasswordGate({ onAuth }) {
+  const [pw, setPw] = useState('')
+  const [error, setError] = useState(false)
+  function handleSubmit(e) {
+    e.preventDefault()
+    if (pw === ADMIN_PASSWORD) {
+      sessionStorage.setItem('admin_authed', '1')
+      onAuth()
+    } else {
+      setError(true)
+      setPw('')
+    }
+  }
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'var(--gray-50)' }}>
+      <div style={{ background: 'white', padding: '32px', borderRadius: '12px', boxShadow: '0 4px 24px rgba(0,0,0,0.1)', minWidth: '300px' }}>
+        <h2 className="bengali" style={{ marginBottom: '20px', textAlign: 'center' }}>🔐 Admin Login</h2>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="password"
+            value={pw}
+            onChange={e => { setPw(e.target.value); setError(false) }}
+            placeholder="পাসওয়ার্ড দিন..."
+            className="bengali"
+            autoFocus
+            style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: error ? '1px solid red' : '1px solid var(--gray-200)', fontSize: '15px', marginBottom: '12px', boxSizing: 'border-box' }}
+          />
+          {error && <p className="bengali" style={{ color: 'red', fontSize: '13px', marginBottom: '10px' }}>ভুল পাসওয়ার্ড!</p>}
+          <button type="submit" className="export-button bengali" style={{ width: '100%' }}>প্রবেশ করুন</button>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 function AdminPage() {
+  const [authed, setAuthed] = useState(() => sessionStorage.getItem('admin_authed') === '1')
   const [submissions, setSubmissions] = useState([])
   const [pendingStudents, setPendingStudents] = useState([])
   const [loading, setLoading] = useState(true)
@@ -17,21 +56,37 @@ function AdminPage() {
   const [notification, setNotification] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [showSettingsModal, setShowSettingsModal] = useState(false)
+  const loadDataRef = useRef(null)
   const itemsPerPage = 7
+
+  if (!authed) return <AdminPasswordGate onAuth={() => setAuthed(true)} />
 
   useEffect(() => {
     loadData()
+    loadDataRef.current = loadData
   }, [])
 
-  // Auto-refresh every 30 seconds
+  // Auto-refresh every 30 seconds + immediately when admin tab becomes visible again
+  useEffect(() => {
+    loadDataRef.current = loadData
+  })
+
   useEffect(() => {
     if (!autoRefresh) return
+    const interval = setInterval(() => { loadData() }, 30000)
 
-    const interval = setInterval(() => {
-      loadData()
-    }, 30000) // 30 seconds
+    // Fix WK-2: When admin tab comes back to foreground, refresh immediately
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        loadDataRef.current?.()
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
 
-    return () => clearInterval(interval)
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
   }, [autoRefresh])
 
   async function loadData() {
