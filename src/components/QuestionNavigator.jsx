@@ -163,6 +163,8 @@ function QuestionNavigatorInner({
   }, [])
 
   /* ── Pagination Tabs ── */
+  const SUBJECT_LABELS = ['Physics', 'Chemistry', 'Math', 'Biology'];
+
   const renderTabs = () => {
     if (groupsCount <= 1) return null;
     return (
@@ -170,13 +172,15 @@ function QuestionNavigatorInner({
         {Array.from({ length: groupsCount }, (_, i) => {
           const start = i * GROUP_SIZE + 1;
           const end = Math.min((i + 1) * GROUP_SIZE, totalQuestions);
+          const tabLabel = SUBJECT_LABELS[i] || `${start}-${end}`;
+
           return (
             <button
               key={i}
               className={`qn-tab ${viewedGroupIndex === i ? 'active' : ''}`}
               onClick={() => setViewedGroupIndex(i)}
             >
-              {start}-{end}
+              {tabLabel}
             </button>
           )
         })}

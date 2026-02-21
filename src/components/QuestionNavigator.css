@@ -135,8 +135,8 @@
 
 /* ─── Pagination Tabs (Segmented Control) ─── */
 .qn-tabs {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 4px;
   background: var(--slate-100);
   padding: 4px;
@@ -145,6 +145,8 @@
 }
 
 .qn-tab {
+  flex: 1;
+  min-width: 60px;
   padding: 8px 4px;
   background: transparent;
   border: none;
