@@ -94,6 +94,18 @@ function QuestionNavigatorInner({
   const [sheetOpen, setSheetOpen] = useState(false)
   const sheetBodyRef = useRef(null)
 
+  // -- Tab Pagination Setup --
+  const GROUP_SIZE = 25;
+  const groupsCount = Math.ceil(totalQuestions / GROUP_SIZE);
+  const activeGroupIndex = Math.floor(currentIndex / GROUP_SIZE);
+
+  const [viewedGroupIndex, setViewedGroupIndex] = useState(activeGroupIndex);
+
+  // Auto-switch tabs when the current question changes (e.g., via "Next" button)
+  useEffect(() => {
+    setViewedGroupIndex(Math.floor(currentIndex / GROUP_SIZE));
+  }, [currentIndex, GROUP_SIZE]);
+
   // Lock body scroll when sheet is open (prevent background scroll on mobile)
   useEffect(() => {
     if (sheetOpen) {
@@ -150,6 +162,35 @@ function QuestionNavigatorInner({
     setSheetOpen(false)
   }, [])
 
+  /* ── Pagination Tabs ── */
+  const renderTabs = () => {
+    if (groupsCount <= 1) return null;
+    return (
+      <div className="qn-tabs">
+        {Array.from({ length: groupsCount }, (_, i) => {
+          const start = i * GROUP_SIZE + 1;
+          const end = Math.min((i + 1) * GROUP_SIZE, totalQuestions);
+          return (
+            <button
+              key={i}
+              className={`qn-tab ${viewedGroupIndex === i ? 'active' : ''}`}
+              onClick={() => setViewedGroupIndex(i)}
+            >
+              {start}-{end}
+            </button>
+          )
+        })}
+      </div>
+    )
+  }
+
+  // Get only the statuses for the CURRENT viewed group
+  const startIndex = viewedGroupIndex * GROUP_SIZE;
+  const endIndex = Math.min(startIndex + GROUP_SIZE, totalQuestions);
+  const currentGroupItems = statuses
+    .map((status, index) => ({ status, index }))
+    .slice(startIndex, endIndex);
+
   /* ── Desktop Sidebar ── */
   const desktopSidebar = (
     <aside className="qn-sidebar" role="navigation" aria-label="প্রশ্ন নেভিগেশন">
@@ -167,9 +208,11 @@ function QuestionNavigatorInner({
 
         <Legend />
 
+        {renderTabs()}
+
         <div className="qn-grid" role="list">
-          {statuses.map((status, i) => (
-            <QuestionButton key={i} index={i} status={status} onJump={onQuestionJump} />
+          {currentGroupItems.map(({ status, index }) => (
+            <QuestionButton key={index} index={index} status={status} onJump={onQuestionJump} />
           ))}
         </div>
       </div>
@@ -239,9 +282,11 @@ function QuestionNavigatorInner({
         <div className="qn-sheet-body" ref={sheetBodyRef}>
           <Legend className="qn-sheet-legend qn-legend" />
 
+          {renderTabs()}
+
           <div className="qn-sheet-grid" role="list">
-            {statuses.map((status, i) => (
-              <QuestionButton key={i} index={i} status={status} onJump={handleSheetSelect} />
+            {currentGroupItems.map(({ status, index }) => (
+              <QuestionButton key={index} index={index} status={status} onJump={handleSheetSelect} />
             ))}
           </div>
         </div>
