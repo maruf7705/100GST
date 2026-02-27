@@ -30,8 +30,8 @@
   }
 }
 
-/* Tablet / Small Laptop */
-@media (max-width: 1024px) {
+/* ≤ 768px: collapse to single column (QuestionNavigator uses its own mobile FAB/drawer) */
+@media (max-width: 768px) {
   .mcq-content {
     grid-template-columns: 1fr;
     gap: var(--spacing-3);

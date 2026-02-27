@@ -2,8 +2,8 @@ import { Buffer } from "buffer";
 import fs from "fs/promises";
 import path from "path";
 
-const OWNER = process.env.GITHUB_OWNER || 'maruf7705';
-const REPO = process.env.GITHUB_REPO || '100GST';
+const OWNER = process.env.GITHUB_OWNER;
+const REPO = process.env.GITHUB_REPO;
 const BRANCH = process.env.GITHUB_BRANCH || "main";
 const TOKEN = process.env.GITHUB_TOKEN;
 
@@ -25,6 +25,13 @@ export default async function handler(req, res) {
             }
             return res.status(500).json({ error: 'Failed to read answers locally' });
         }
+    }
+
+    if (!OWNER || !REPO) {
+        return res.status(500).json({
+            error: 'Missing GitHub configuration',
+            required: ['GITHUB_OWNER', 'GITHUB_REPO']
+        })
     }
 
     // On Vercel - use GitHub Contents API (no caching, always fresh!)

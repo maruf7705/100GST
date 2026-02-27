@@ -17,6 +17,7 @@ function SubmissionsTable({
   const [selectedSubmission, setSelectedSubmission] = useState(null)
   const [spectatingStudent, setSpectatingStudent] = useState(null)
   const [questions, setQuestions] = useState([])
+  const [spectateQuestions, setSpectateQuestions] = useState([])
   const [modalFilter, setModalFilter] = useState('all')
   const [activeQuestionId, setActiveQuestionId] = useState(null)
   const questionRefs = useRef({})
@@ -29,6 +30,14 @@ function SubmissionsTable({
     }
   }, [selectedSubmission])
 
+  useEffect(() => {
+    if (spectatingStudent) {
+      loadSpectateQuestions()
+    } else {
+      setSpectateQuestions([])
+    }
+  }, [spectatingStudent])
+
   async function loadQuestions() {
     try {
       const questionFile = selectedSubmission?.questionFile || 'questions.json'
@@ -38,6 +47,22 @@ function SubmissionsTable({
       setQuestions(data)
     } catch (err) {
       console.error('Failed to load questions:', err)
+    }
+  }
+
+  async function loadSpectateQuestions() {
+    try {
+      const questionFile = spectatingStudent?.questionFile || 'questions.json'
+      const res = await fetch(`/${questionFile}`, { cache: 'no-store' })
+      if (!res.ok) {
+        setSpectateQuestions([])
+        return
+      }
+      const data = await res.json()
+      setSpectateQuestions(data)
+    } catch (err) {
+      console.error('Failed to load spectate questions:', err)
+      setSpectateQuestions([])
     }
   }
 
@@ -618,25 +643,47 @@ function SubmissionsTable({
               })()}
 
               {/* Answer Grid */}
-              {spectatingStudent.answers && spectatingStudent.totalQuestions > 0 && (
+              {spectatingStudent.totalQuestions > 0 && (
                 <div className="adm-answer-grid-section">
                   <h3 className="adm-section-title bengali">🗂️ উত্তর ম্যাপ</h3>
                   <div className="adm-answer-grid">
-                    {Array.from({ length: spectatingStudent.totalQuestions }, (_, i) => {
-                      const qid = (i + 1).toString()
-                      const hasAnswer = spectatingStudent.answers[qid] !== undefined && spectatingStudent.answers[qid] !== null
-                      const isCurrent = (i + 1) === spectatingStudent.currentQuestion
-                      return (
-                        <div
-                          key={qid}
-                          className={`adm-grid-tile ${hasAnswer ? 'correct' : 'skipped'} ${isCurrent ? 'active' : ''}`}
-                          title={hasAnswer ? `উত্তর: ${spectatingStudent.answers[qid]}` : 'উত্তর দেয়নি'}
-                          style={isCurrent ? { outline: '2px solid #6366f1', outlineOffset: '1px' } : {}}
-                        >
-                          {i + 1}
-                        </div>
+                    {(() => {
+                      const answers = spectatingStudent.answers || {}
+                      const answeredKeys = new Set(
+                        Object.keys(answers).filter(k => answers[k] !== undefined && answers[k] !== null)
                       )
-                    })}
+                      const hasQuestionsLoaded = spectateQuestions.length > 0
+
+                      return Array.from({ length: spectatingStudent.totalQuestions }, (_, i) => {
+                        const qNum = i + 1
+                        let hasAnswer = false
+                        let answerVal = null
+
+                        if (hasQuestionsLoaded && spectateQuestions[i]) {
+                          // question file লোড হয়েছে: সঠিক question id দিয়ে check করো
+                          const qId = spectateQuestions[i].id.toString()
+                          hasAnswer = answeredKeys.has(qId)
+                          answerVal = answers[qId]
+                        } else {
+                          // fallback: position number দিয়ে check করো
+                          hasAnswer = answeredKeys.has(qNum.toString())
+                          answerVal = answers[qNum.toString()]
+                        }
+
+                        const isCurrent = qNum === spectatingStudent.currentQuestion
+                        return (
+                          <div
+                            key={qNum}
+                            className={`adm-grid-tile ${hasAnswer ? 'correct' : 'skipped'} ${isCurrent ? 'active' : ''}`}
+                            title={hasAnswer ? `উত্তর: ${answerVal}` : 'উত্তর দেয়নি'}
+                            style={isCurrent ? { outline: '2px solid #6366f1', outlineOffset: '1px' } : {}}
+                          >
+                            {qNum}
+                          </div>
+                        )
+                      })
+                    })()}
+
                   </div>
                   <div className="adm-grid-legend">
                     <span><span className="adm-dot correct" />উত্তর দিয়েছে</span>

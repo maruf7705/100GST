@@ -2,8 +2,8 @@ import { Buffer } from 'buffer'
 import fs from 'fs/promises'
 import path from 'path'
 
-const OWNER = process.env.GITHUB_OWNER || 'maruf7705'
-const REPO = process.env.GITHUB_REPO || '100GST'
+const OWNER = process.env.GITHUB_OWNER
+const REPO = process.env.GITHUB_REPO
 const BRANCH = process.env.GITHUB_BRANCH || 'main'
 const TOKEN = process.env.GITHUB_TOKEN
 
@@ -80,10 +80,10 @@ export default async function handler(req, res) {
         }
 
         if (!isDev) {
-            if (!TOKEN) {
+            if (!OWNER || !REPO || !TOKEN) {
                 return res.status(500).json({
-                    error: 'GitHub token not configured',
-                    note: 'Please set GITHUB_TOKEN in Vercel environment variables'
+                    error: 'Missing GitHub configuration',
+                    required: ['GITHUB_OWNER', 'GITHUB_REPO', 'GITHUB_TOKEN']
                 })
             }
 

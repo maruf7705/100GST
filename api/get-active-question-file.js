@@ -1,7 +1,7 @@
 import { Buffer } from "buffer";
 
-const OWNER = process.env.GITHUB_OWNER || 'maruf7705';
-const REPO = process.env.GITHUB_REPO || '100GST';
+const OWNER = process.env.GITHUB_OWNER;
+const REPO = process.env.GITHUB_REPO;
 const BRANCH = process.env.GITHUB_BRANCH || "main";
 const TOKEN = process.env.GITHUB_TOKEN;
 
@@ -11,7 +11,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        const isDev = !process.env.VERCEL
+        const isDev = !process.env.VERCEL_ENV
 
         let config;
 
@@ -31,6 +31,13 @@ export default async function handler(req, res) {
                 })
             }
         } else {
+            if (!OWNER || !REPO) {
+                return res.status(500).json({
+                    error: 'Missing GitHub configuration',
+                    required: ['GITHUB_OWNER', 'GITHUB_REPO']
+                })
+            }
+
             // On Vercel - use GitHub Contents API (instant, no cache!)
             try {
                 const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/exam-config.json?ref=${BRANCH}`;

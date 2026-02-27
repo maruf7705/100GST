@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        const isDev = !process.env.VERCEL
+        const isDev = !process.env.VERCEL_ENV
         let files = []
 
         if (isDev) {
@@ -26,9 +26,18 @@ export default async function handler(req, res) {
             }
         } else {
             // On Vercel - use GitHub API to dynamically list all files
-            const GITHUB_REPO = process.env.GITHUB_REPO ? (process.env.GITHUB_OWNER ? `${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}` : process.env.GITHUB_REPO) : 'maruf7705/100GST'
+            const owner = process.env.GITHUB_OWNER
+            const repo = process.env.GITHUB_REPO
+            if (!owner || !repo) {
+                return res.status(500).json({
+                    error: 'Missing GitHub configuration',
+                    required: ['GITHUB_OWNER', 'GITHUB_REPO']
+                })
+            }
+
+            const githubRepo = `${owner}/${repo}`
             const GITHUB_TOKEN = process.env.GITHUB_TOKEN
-            const githubUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/public`
+            const githubUrl = `https://api.github.com/repos/${githubRepo}/contents/public`
 
             const headers = {
                 'Accept': 'application/vnd.github.v3+json'
